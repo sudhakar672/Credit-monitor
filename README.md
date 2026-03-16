@@ -213,6 +213,4 @@ This application is built around RBI guidelines:
 
 ---
 
-## License
 
-MIT — Free for educational and commercial use.

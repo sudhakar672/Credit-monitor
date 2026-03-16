@@ -1,4 +1,4 @@
-# Bank Credit Risk Monitor
+# Bank Credit Risk Monitor - Sudhakar A
 
 A full-stack **Java 17 + Spring Boot 3.2 + MySQL + Thymeleaf** application for monitoring bank credit risk, built on Indian banking standards (RBI, CIBIL, NPA/IRACP norms).
 

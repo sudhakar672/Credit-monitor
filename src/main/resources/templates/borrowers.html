@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Borrowers — Credit Risk Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body>
+
+<nav class="topnav">
+    <div class="nav-brand">
+        <div class="nav-logo">CR</div>
+        <div>
+            <div class="nav-title">Credit Risk Monitor</div>
+            <div class="nav-sub">RBI Prudential Framework · FY 2025-26</div>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/borrowers}" class="active">Borrowers</a>
+        <a th:href="@{/alerts}">Alerts</a>
+    </div>
+    <div class="nav-right">
+        <div class="live-badge"><span class="dot"></span> Live</div>
+        <div class="nav-time" id="clock"></div>
+    </div>
+</nav>
+
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Borrower Portfolio</h1>
+            <p class="page-sub" th:text="${borrowers.size() + ' accounts'}">15 accounts</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form th:action="@{/borrowers}" method="get" class="search-form">
+            <input type="text" name="search" placeholder="Search borrower name…"
+                   th:value="${search}" class="search-input"/>
+            <button type="submit" class="btn-outline">Search</button>
+        </form>
+        <div class="segment-filters">
+            <a th:href="@{/borrowers}" th:classappend="${segment == null and search == null} ? 'active'">All</a>
+            <a th:href="@{/borrowers(segment='Corporate')}"       th:classappend="${segment == 'Corporate'}       ? 'active'">Corporate</a>
+            <a th:href="@{/borrowers(segment='MSME')}"            th:classappend="${segment == 'MSME'}            ? 'active'">MSME</a>
+            <a th:href="@{/borrowers(segment='Housing Loan')}"    th:classappend="${segment == 'Housing Loan'}    ? 'active'">Housing Loan</a>
+            <a th:href="@{/borrowers(segment='Trade Finance')}"   th:classappend="${segment == 'Trade Finance'}   ? 'active'">Trade Finance</a>
+            <a th:href="@{/borrowers(segment='Startup')}"         th:classappend="${segment == 'Startup'}         ? 'active'">Startup</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="tbl-wrap">
+            <table class="ptable">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Borrower</th>
+                        <th>Segment</th>
+                        <th>Location</th>
+                        <th>CIBIL Score</th>
+                        <th>Exposure</th>
+                        <th>Utilization</th>
+                        <th>DPD</th>
+                        <th>Risk</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${borrowers}">
+                        <td class="mono muted" th:text="${b.borrowerCode}">BRW001</td>
+                        <td class="fw500" th:text="${b.name}">Name</td>
+                        <td>
+                            <span class="seg-tag" th:text="${b.segment}">Corporate</span>
+                        </td>
+                        <td class="muted" th:text="${b.city + ', ' + b.state}">Mumbai, Maharashtra</td>
+                        <td>
+                            <div class="score-cell">
+                                <div class="sbar-wrap">
+                                    <div class="sbar"
+                                         th:style="'width:' + ${(b.latestCibilScore - 300) * 100 / 600} + '%;background:' + ${b.latestCibilScore < 550 ? '#A32D2D' : (b.latestCibilScore < 650 ? '#C8842A' : (b.latestCibilScore < 750 ? '#534AB7' : '#0F6E56'))}">
+                                    </div>
+                                </div>
+                                <span th:text="${b.latestCibilScore}">712</span>
+                            </div>
+                        </td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(b.totalExposure / 10000000, 1, 'COMMA', 2, 'POINT') + ' Cr'}">₹685 Cr</td>
+                        <td>
+                            <span th:classappend="${b.utilizationPct >= 85} ? 'util-high' : (${b.utilizationPct >= 70} ? 'util-med' : 'util-ok')"
+                                  th:text="${b.utilizationPct + '%'}">91%</span>
+                        </td>
+                        <td th:text="${b.dpd > 0 ? b.dpd + ' days' : '—'}"
+                            th:classappend="${b.dpd > 0} ? 'util-high'">—</td>
+                        <td>
+                            <span th:classappend="'rtag r' + ${#strings.toLowerCase(b.riskLevel)}"
+                                  th:text="${b.riskLevel}">Low</span>
+                        </td>
+                        <td>
+                            <a th:href="@{'/borrowers/' + ${b.id}}" class="tbl-link">View →</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(borrowers)}">
+                        <td colspan="10" class="no-data">No borrowers found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pageTitle} + ' — Credit Risk Monitor'">Credit Risk Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+    <div class="nav-brand">
+        <div class="nav-logo">CR</div>
+        <div>
+            <div class="nav-title">Credit Risk Monitor</div>
+            <div class="nav-sub">RBI Prudential Framework · FY 2025-26</div>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/}" th:classappend="${activePage == 'dashboard'} ? 'active'">Dashboard</a>
+        <a th:href="@{/borrowers}" th:classappend="${activePage == 'borrowers'} ? 'active'">Borrowers</a>
+        <a th:href="@{/alerts}" th:classappend="${activePage == 'alerts'} ? 'active'">
+            Alerts
+            <span class="alert-badge" th:if="${openAlertCount != null and openAlertCount > 0}"
+                  th:text="${openAlertCount}">0</span>
+        </a>
+    </div>
+    <div class="nav-right">
+        <div class="live-badge"><span class="dot"></span> Live</div>
+        <div class="nav-time" id="clock"></div>
+    </div>
+</nav>
+
+<!-- PAGE CONTENT -->
+<div class="page" th:fragment="content">
+    <!-- injected per page -->
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

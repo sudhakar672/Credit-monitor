@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard — Credit Risk Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav class="topnav">
+    <div class="nav-brand">
+        <div class="nav-logo">CR</div>
+        <div>
+            <div class="nav-title">Credit Risk Monitor</div>
+            <div class="nav-sub">RBI Prudential Framework · FY 2025-26</div>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/}" class="active">Dashboard</a>
+        <a th:href="@{/borrowers}">Borrowers</a>
+        <a th:href="@{/alerts}">
+            Alerts
+            <span class="alert-badge" th:if="${openAlertCount > 0}" th:text="${openAlertCount}"></span>
+        </a>
+    </div>
+    <div class="nav-right">
+        <div class="live-badge"><span class="dot"></span> Live</div>
+        <div class="nav-time" id="clock"></div>
+    </div>
+</nav>
+
+<div class="page">
+
+    <!-- Metric Cards -->
+    <div class="metrics">
+        <div class="mcard saffron">
+            <div class="mlabel">Total Exposure</div>
+            <div class="mvalue" th:text="${'₹' + #numbers.formatDecimal(dashboard.totalExposure / 10000000, 1, 'COMMA', 2, 'POINT') + ' Cr'}">₹35,200 Cr</div>
+            <div class="mdelta up">↑ 2.1% MoM</div>
+        </div>
+        <div class="mcard teal">
+            <div class="mlabel">Avg CIBIL Score</div>
+            <div class="mvalue" th:text="${dashboard.avgCibilScore}">712</div>
+            <div class="mdelta dn">↓ 4 pts this month</div>
+        </div>
+        <div class="mcard red">
+            <div class="mlabel">NPA Ratio</div>
+            <div class="mvalue" th:text="${dashboard.npaRatio + '%'}">2.38%</div>
+            <div class="mdelta dn">↑ 0.12% — deteriorating</div>
+        </div>
+        <div class="mcard indigo">
+            <div class="mlabel">Watch List Accounts</div>
+            <div class="mvalue" th:text="${dashboard.watchlistCount}">47</div>
+            <div class="mdelta flat">+3 added this week</div>
+        </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-label">Provision Coverage Ratio</div>
+            <div class="kpi-val" th:text="${dashboard.pcr + '%'}">68.4%</div>
+            <div class="kpi-sub" th:classappend="${dashboard.pcr < 70} ? 'warn-text'">
+                RBI min: 70% — <span th:text="${dashboard.pcr < 70} ? 'attention needed' : 'compliant'">attention needed</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Capital Adequacy (CRAR)</div>
+            <div class="kpi-val" th:text="${dashboard.crar + '%'}">15.2%</div>
+            <div class="kpi-sub">Above RBI threshold of 9% — comfortable</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Loan-to-Deposit Ratio</div>
+            <div class="kpi-val" th:text="${dashboard.ldr + '%'}">74.8%</div>
+            <div class="kpi-sub">Within acceptable band of 70–80%</div>
+        </div>
+    </div>
+
+    <!-- Exposure Chart -->
+    <div class="divider"><span class="orn">✦</span> Portfolio Analysis <span class="orn">✦</span></div>
+
+    <div class="card" style="margin-bottom:14px;">
+        <div class="card-header-row">
+            <div class="ctitle">Exposure by risk band — ₹ Crore (Apr 2025 – Mar 2026)</div>
+            <div class="legend">
+                <div class="leg"><div class="leg-sq" style="background:#C8842A;"></div>Prime</div>
+                <div class="leg"><div class="leg-sq" style="background:#EF9F27;"></div>Near-prime</div>
+                <div class="leg"><div class="leg-sq" style="background:#534AB7;"></div>Subprime</div>
+                <div class="leg"><div class="leg-sq" style="background:#A32D2D;"></div>High risk</div>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:200px;">
+            <canvas id="chartExposure"></canvas>
+        </div>
+    </div>
+
+    <!-- Alerts + NPA -->
+    <div class="grid2">
+        <div class="card">
+            <div class="card-header-row">
+                <div class="ctitle">Active Alerts</div>
+                <span class="badge-red" th:text="${openAlertCount + ' open'}">4 open</span>
+            </div>
+            <div class="alert-list">
+                <div th:each="alert : ${dashboard.recentAlerts}"
+                     th:classappend="'alert ' + ${#strings.toLowerCase(alert.severity)}">
+                    <div class="aicon"
+                         th:text="${alert.severity == 'OK'} ? '✓' : (${alert.severity == 'INFO'} ? 'i' : '!')">!</div>
+                    <div>
+                        <div class="aname" th:text="${alert.borrowerName}">Borrower</div>
+                        <div class="adesc" th:text="${alert.message}">Message</div>
+                    </div>
+                    <div class="atime"
+                         th:text="${#temporals.format(alert.alertTime, 'HH:mm')}">09:14</div>
+                </div>
+                <div th:if="${#lists.isEmpty(dashboard.recentAlerts)}" class="no-data">No open alerts</div>
+            </div>
+            <a th:href="@{/alerts}" class="card-link">View all alerts →</a>
+        </div>
+
+        <div class="card">
+            <div class="ctitle">NPA Trend — 12 months</div>
+            <div class="chart-wrap" style="height:210px;">
+                <canvas id="chartNpa"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Watch List Table -->
+    <div class="divider"><span class="orn">✦</span> Borrower Watch List <span class="orn">✦</span></div>
+    <div class="card">
+        <div class="card-header-row">
+            <div class="ctitle">Top accounts under monitoring</div>
+            <a th:href="@{/borrowers}" class="btn-outline">View all borrowers →</a>
+        </div>
+        <div class="tbl-wrap">
+            <table class="ptable">
+                <thead>
+                    <tr>
+                        <th>Borrower</th>
+                        <th>Segment</th>
+                        <th>CIBIL Score</th>
+                        <th>Exposure</th>
+                        <th>Utilization</th>
+                        <th>DPD</th>
+                        <th>Risk</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${dashboard.watchList}">
+                        <td class="fw500" th:text="${b.name}">Name</td>
+                        <td class="muted" th:text="${b.segment}">Segment</td>
+                        <td>
+                            <div class="score-cell">
+                                <div class="sbar-wrap">
+                                    <div class="sbar"
+                                         th:style="'width:' + ${(b.latestCibilScore - 300) * 100 / 600} + '%;background:' + ${b.latestCibilScore < 550 ? '#A32D2D' : (b.latestCibilScore < 650 ? '#C8842A' : (b.latestCibilScore < 750 ? '#534AB7' : '#0F6E56'))}">
+                                    </div>
+                                </div>
+                                <span th:text="${b.latestCibilScore}">712</span>
+                            </div>
+                        </td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(b.totalExposure / 10000000, 1, 'COMMA', 2, 'POINT') + ' Cr'}">₹685 Cr</td>
+                        <td>
+                            <span th:classappend="${b.utilizationPct >= 85} ? 'util-high' : (${b.utilizationPct >= 70} ? 'util-med' : 'util-ok')"
+                                  th:text="${b.utilizationPct + '%'}">91%</span>
+                        </td>
+                        <td th:text="${b.dpd > 0 ? b.dpd + ' days' : '—'}"
+                            th:classappend="${b.dpd > 0} ? 'util-high'">—</td>
+                        <td>
+                            <span th:classappend="'rtag r' + ${#strings.toLowerCase(b.riskLevel)}"
+                                  th:text="${b.riskLevel}">Low</span>
+                        </td>
+                        <td>
+                            <a th:href="@{'/borrowers/' + ${b.id}}" class="tbl-link">View →</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RBI Banner -->
+    <div class="rbi-banner">
+        <div class="rbi-text">
+            <strong>RBI Compliance Notice</strong> — FY 2025-26 · IRACP Prudential Norms applicable.
+            Next mandatory review: <strong>31 March 2026</strong>.
+            <span th:if="${dashboard.pcr < 70}" class="warn-inline">⚠ PCR below minimum threshold — remedial action required.</span>
+        </div>
+        <a th:href="@{/alerts}" class="btn-primary">View Compliance Alerts</a>
+    </div>
+
+</div><!-- /page -->
+
+<!-- Chart Data passed from Thymeleaf -->
+<script th:inline="javascript">
+    const npaLabels  = /*[[${dashboard.npaTrend.![monthYear]}]]*/   [];
+    const npaData    = /*[[${dashboard.npaTrend.![npaRatio]}]]*/    [];
+
+    const expLabels  = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+    const expPrime   = [15000,15200,15400,15600,15800,15700,16000,16200,16400,16600,16800,17000];
+    const expNear    = [7500,7600,7550,7700,7800,7900,7950,8000,8100,8200,8250,8350];
+    const expSub     = [5000,5100,5200,5300,5250,5350,5400,5450,5500,5550,5600,5650];
+    const expHigh    = [3100,3050,3200,3300,3350,3400,3450,3500,3550,3600,3600,3600];
+</script>
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

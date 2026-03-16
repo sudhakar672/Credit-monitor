@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Alerts — Credit Risk Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body>
+
+<nav class="topnav">
+    <div class="nav-brand">
+        <div class="nav-logo">CR</div>
+        <div>
+            <div class="nav-title">Credit Risk Monitor</div>
+            <div class="nav-sub">RBI Prudential Framework · FY 2025-26</div>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/borrowers}">Borrowers</a>
+        <a th:href="@{/alerts}" class="active">
+            Alerts
+            <span class="alert-badge" th:if="${openCount > 0}" th:text="${openCount}"></span>
+        </a>
+    </div>
+    <div class="nav-right">
+        <div class="live-badge"><span class="dot"></span> Live</div>
+        <div class="nav-time" id="clock"></div>
+    </div>
+</nav>
+
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Credit Alerts</h1>
+            <p class="page-sub">
+                <span th:text="${openCount}">4</span> open ·
+                <span th:text="${criticalCount}">2</span> critical
+            </p>
+        </div>
+    </div>
+
+    <!-- Severity Filter -->
+    <div class="filter-bar" style="margin-bottom:14px;">
+        <div class="segment-filters">
+            <a th:href="@{/alerts}"                          th:classappend="${severity == null} ? 'active'">All Open</a>
+            <a th:href="@{/alerts(severity='CRITICAL')}"     th:classappend="${severity == 'CRITICAL'} ? 'active'">Critical</a>
+            <a th:href="@{/alerts(severity='WARNING')}"      th:classappend="${severity == 'WARNING'}  ? 'active'">Warning</a>
+            <a th:href="@{/alerts(severity='INFO')}"         th:classappend="${severity == 'INFO'}     ? 'active'">Info</a>
+        </div>
+    </div>
+
+    <!-- Alert Cards -->
+    <div class="alert-cards">
+        <div th:each="alert : ${alerts}"
+             th:classappend="'alert-card ' + ${#strings.toLowerCase(alert.severity)}">
+            <div class="acard-left">
+                <div class="aicon-lg"
+                     th:text="${alert.severity == 'OK'} ? '✓' : (${alert.severity == 'INFO'} ? 'i' : '!')">!</div>
+            </div>
+            <div class="acard-body">
+                <div class="acard-top">
+                    <span class="aname" th:text="${alert.borrowerName}">Borrower</span>
+                    <span th:classappend="'sev-badge sev-' + ${#strings.toLowerCase(alert.severity)}"
+                          th:text="${alert.severity}">CRITICAL</span>
+                    <span class="acard-type muted" th:text="${alert.alertType.replace('_',' ')}">Alert Type</span>
+                </div>
+                <div class="adesc" th:text="${alert.message}">Alert message here</div>
+                <div class="acard-footer">
+                    <span class="atime" th:text="${#temporals.format(alert.alertTime, 'dd MMM yyyy HH:mm')}">16 Mar 2026 09:14</span>
+                    <form th:action="@{'/alerts/' + ${alert.id} + '/resolve'}" method="post" style="display:inline;">
+                        <button type="submit" class="btn-resolve">Mark Resolved</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(alerts)}" class="empty-state">
+            <div class="empty-icon">✓</div>
+            <div class="empty-title">No open alerts</div>
+            <div class="empty-sub">All alerts have been resolved.</div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>
